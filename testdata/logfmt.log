@@ -1,0 +1,10 @@
+ts=2026-03-03T01:00:00Z level=info msg="Server starting" service=api host=prod-1 port=8080
+ts=2026-03-03T01:00:01Z level=info msg="Connected to database" service=api host=prod-1
+ts=2026-03-03T01:00:05Z level=info msg="Request completed" service=api method=GET path=/health status=200 duration=2ms
+ts=2026-03-03T01:00:10Z level=warn msg="Slow query detected" service=api duration=1250ms query="SELECT * FROM users"
+ts=2026-03-03T01:00:15Z level=error msg="Connection refused" service=api host=prod-1 target=10.0.1.50:5432
+ts=2026-03-03T01:00:20Z level=error msg="Connection refused" service=api host=prod-2 target=10.0.1.51:5432
+ts=2026-03-03T01:00:25Z level=info msg="Retrying connection" service=api attempt=1 max_retries=3
+ts=2026-03-03T01:00:30Z level=error msg="Auth failed for user abc123" service=auth reason="token expired"
+ts=2026-03-03T01:00:35Z level=info msg="Request completed" service=api method=POST path=/api/orders status=201 duration=85ms
+ts=2026-03-03T01:00:40Z level=debug msg="Cache hit" service=api key="user:550e8400" ttl=300s

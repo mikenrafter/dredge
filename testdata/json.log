@@ -1,0 +1,25 @@
+{"timestamp":"2026-03-03T01:00:00Z","level":"info","message":"Server starting","service":"api","host":"prod-1","port":8080}
+{"timestamp":"2026-03-03T01:00:01Z","level":"info","message":"Connected to database","service":"api","host":"prod-1","db":"postgres://db-primary:5432"}
+{"timestamp":"2026-03-03T01:00:02Z","level":"info","message":"Listening on :8080","service":"api","host":"prod-1"}
+{"timestamp":"2026-03-03T01:00:05Z","level":"info","message":"GET /health 200 2ms","service":"api","host":"prod-1","method":"GET","path":"/health","status":200,"duration_ms":2}
+{"timestamp":"2026-03-03T01:00:10Z","level":"info","message":"POST /api/users 201 45ms","service":"api","host":"prod-1","method":"POST","path":"/api/users","status":201,"duration_ms":45}
+{"timestamp":"2026-03-03T01:00:15Z","level":"warn","message":"Slow query detected: SELECT * FROM users WHERE email = 'test@example.com'","service":"api","host":"prod-1","duration_ms":1250,"query_id":"q-a1b2c3d4"}
+{"timestamp":"2026-03-03T01:00:20Z","level":"info","message":"GET /api/products 200 12ms","service":"api","host":"prod-2","method":"GET","path":"/api/products","status":200,"duration_ms":12}
+{"timestamp":"2026-03-03T01:00:25Z","level":"error","message":"Connection timeout to 10.0.1.50:5432","service":"api","host":"prod-1","error_code":"ETIMEOUT","retry":1}
+{"timestamp":"2026-03-03T01:00:26Z","level":"error","message":"Connection timeout to 10.0.1.50:5432","service":"api","host":"prod-1","error_code":"ETIMEOUT","retry":2}
+{"timestamp":"2026-03-03T01:00:27Z","level":"error","message":"Connection timeout to 10.0.1.50:5432","service":"api","host":"prod-2","error_code":"ETIMEOUT","retry":1}
+{"timestamp":"2026-03-03T01:00:30Z","level":"warn","message":"Circuit breaker opened for db-replica-3","service":"api","host":"prod-1","circuit":"db-replica-3"}
+{"timestamp":"2026-03-03T01:00:35Z","level":"info","message":"Falling back to primary database","service":"api","host":"prod-1"}
+{"timestamp":"2026-03-03T01:00:40Z","level":"error","message":"Auth token expired for user 550e8400-e29b-41d4-a716-446655440000","service":"auth","host":"prod-1","user_id":"550e8400-e29b-41d4-a716-446655440000"}
+{"timestamp":"2026-03-03T01:00:45Z","level":"error","message":"Auth token expired for user 6ba7b810-9dad-11d1-80b4-00c04fd430c8","service":"auth","host":"prod-2","user_id":"6ba7b810-9dad-11d1-80b4-00c04fd430c8"}
+{"timestamp":"2026-03-03T01:00:50Z","level":"info","message":"GET /api/orders 200 8ms","service":"api","host":"prod-1","method":"GET","path":"/api/orders","status":200,"duration_ms":8}
+{"timestamp":"2026-03-03T01:00:55Z","level":"error","message":"Connection timeout to 10.0.1.51:5432","service":"api","host":"prod-1","error_code":"ETIMEOUT","retry":1}
+{"timestamp":"2026-03-03T01:01:00Z","level":"fatal","message":"Out of memory: cannot allocate 2147483648 bytes","service":"worker","host":"prod-3","requested_bytes":2147483648}
+{"timestamp":"2026-03-03T01:01:05Z","level":"error","message":"Worker process crashed","service":"worker","host":"prod-3","exit_code":137,"signal":"SIGKILL"}
+{"timestamp":"2026-03-03T01:01:10Z","level":"info","message":"Restarting worker process","service":"worker","host":"prod-3","attempt":1}
+{"timestamp":"2026-03-03T01:01:15Z","level":"error","message":"File not found: /var/data/cache/session_abc123.tmp","service":"api","host":"prod-1","path":"/var/data/cache/session_abc123.tmp"}
+{"timestamp":"2026-03-03T01:01:20Z","level":"error","message":"File not found: /var/data/cache/session_def456.tmp","service":"api","host":"prod-2","path":"/var/data/cache/session_def456.tmp"}
+{"timestamp":"2026-03-03T01:01:25Z","level":"warn","message":"High memory usage: 89%","service":"worker","host":"prod-3","memory_percent":89}
+{"timestamp":"2026-03-03T01:01:30Z","level":"info","message":"Garbage collection completed","service":"worker","host":"prod-3","freed_mb":512,"duration_ms":230}
+{"timestamp":"2026-03-03T01:01:35Z","level":"info","message":"GET /health 200 1ms","service":"api","host":"prod-1","method":"GET","path":"/health","status":200,"duration_ms":1}
+{"timestamp":"2026-03-03T01:01:40Z","level":"info","message":"Background job completed: send_emails","service":"worker","host":"prod-3","job":"send_emails","processed":150,"failed":2}
