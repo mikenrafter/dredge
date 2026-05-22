@@ -1,74 +1,13 @@
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use colored::Colorize;
+use dredge::cli::{Cli, Command};
 use dredge::format;
+use dredge::input;
 use dredge::query;
 use dredge::analysis;
 use dredge::output;
-use std::io::{self, Read};
-use std::fs;
+use std::io::{self, IsTerminal};
 use std::path::PathBuf;
-
-#[derive(Parser)]
-#[command(
-    name = "dredge",
-    about = "A fast, smart log analysis tool for the terminal",
-    long_about = "Point dredge at your logs and it tells you what's wrong.\n\
-        Auto-detects formats, clusters similar errors, spots trends,\n\
-        and gives you a clear summary instead of walls of text.",
-    version
-)]
-struct Cli {
-    #[command(subcommand)]
-    command: Option<Command>,
-
-    /// Log files to analyze (reads stdin if none provided)
-    #[arg(global = true)]
-    files: Vec<PathBuf>,
-
-    /// Filter expression (e.g., 'level == "error"', 'status >= 500')
-    #[arg(short = 'w', long = "where", global = true)]
-    filter: Option<String>,
-
-    /// Text search across all fields
-    #[arg(short = 's', long = "search", global = true)]
-    search: Option<String>,
-
-    /// Show records since duration ago (e.g., 1h, 30m, 7d)
-    #[arg(long = "since", global = true)]
-    since: Option<String>,
-
-    /// Show records until duration ago (e.g., 1h, 30m)
-    #[arg(long = "until", global = true)]
-    until: Option<String>,
-
-    /// Minimum log level to show (trace, debug, info, warn, error, fatal)
-    #[arg(short = 'l', long = "level", global = true)]
-    level: Option<String>,
-
-    /// Count records grouped by field
-    #[arg(short = 'c', long = "count-by", global = true)]
-    count_by: Option<String>,
-
-    /// Maximum number of records to display
-    #[arg(short = 'n', long = "limit", global = true)]
-    limit: Option<usize>,
-
-    /// Output as JSON
-    #[arg(long = "json", global = true)]
-    json: bool,
-
-    /// Show verbose output with all fields
-    #[arg(short = 'v', long = "verbose", global = true)]
-    verbose: bool,
-}
-
-#[derive(Subcommand)]
-enum Command {
-    /// Analyze logs and show a summary report (default if no flags given)
-    Summary,
-    /// List supported log formats
-    Formats,
-}
 
 fn main() {
     let cli = Cli::parse();
@@ -81,8 +20,18 @@ fn main() {
         _ => {}
     }
 
-    // Read input
-    let input = read_input(&cli.files);
+    let max_bytes = input::resolve_max_bytes(cli.max_input_bytes);
+    let input = match read_input(&cli.files, max_bytes) {
+        Ok(s) => s,
+        Err(e) if e.kind() == io::ErrorKind::InvalidData => {
+            eprintln!("{} {}", "error:".red().bold(), e);
+            std::process::exit(1);
+        }
+        Err(e) => {
+            eprintln!("{} {}", "error:".red().bold(), e);
+            std::process::exit(1);
+        }
+    };
     if input.trim().is_empty() {
         eprintln!("{} No input. Provide log files or pipe data via stdin.", "error:".red().bold());
         eprintln!("\n  {} dredge <file.log>", "Usage:".dimmed());
@@ -160,32 +109,36 @@ fn main() {
     }
 }
 
-fn read_input(files: &[PathBuf]) -> String {
+fn read_input(files: &[PathBuf], max_bytes: usize) -> io::Result<String> {
     if files.is_empty() {
-        // Check if stdin is a pipe
-        if atty::is(atty::Stream::Stdin) {
-            return String::new();
+        if io::stdin().is_terminal() {
+            return Ok(String::new());
         }
-        let mut buf = String::new();
-        io::stdin().read_to_string(&mut buf).unwrap_or_default();
-        buf
-    } else {
-        let mut combined = String::new();
-        for path in files {
-            match fs::read_to_string(path) {
-                Ok(content) => {
-                    combined.push_str(&content);
-                    if !content.ends_with('\n') {
-                        combined.push('\n');
-                    }
+        return input::read_bounded(io::stdin().lock(), max_bytes);
+    }
+
+    let mut combined = String::new();
+    for path in files {
+        match input::read_file_bounded(path, max_bytes) {
+            Ok(content) => {
+                if combined.len() + content.len() > max_bytes {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        input::LIMIT_ERROR,
+                    ));
                 }
-                Err(e) => {
-                    eprintln!("{} {}: {}", "warning:".yellow().bold(), path.display(), e);
+                combined.push_str(&content);
+                if !content.ends_with('\n') {
+                    combined.push('\n');
                 }
             }
+            Err(e) if e.kind() == io::ErrorKind::InvalidData => return Err(e),
+            Err(e) => {
+                eprintln!("{} {}: {}", "warning:".yellow().bold(), path.display(), e);
+            }
         }
-        combined
     }
+    Ok(combined)
 }
 
 fn build_filters(cli: &Cli) -> Result<Vec<query::Filter>, String> {
